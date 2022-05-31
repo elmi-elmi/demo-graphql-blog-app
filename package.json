@@ -1,11 +1,11 @@
 {
-  "scripts":{
-    "start:dev":"nodemon --watch './**/*.ts' --exec 'ts-node' src/index.ts"
-  }
-  ,
+  "scripts": {
+    "start:dev": "nodemon --watch './**/*.ts' --exec 'ts-node' src/index.ts"
+  },
   "dependencies": {
     "apollo-server": "^3.8.1",
-    "graphql": "^16.5.0"
+    "graphql": "^16.5.0",
+    "prisma": "^3.14.0"
   },
   "devDependencies": {
     "nodemon": "^2.0.16",
