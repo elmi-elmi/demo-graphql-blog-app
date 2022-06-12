@@ -9,7 +9,6 @@ const prisma = new PrismaClient()
 export interface Context {
     prisma: PrismaClient<Prisma.PrismaClientOptions, never, Prisma.RejectOnNotFound | Prisma.RejectPerOperation | undefined>
 }
-
 const resolvers = {
     Query,
     Mutation,
