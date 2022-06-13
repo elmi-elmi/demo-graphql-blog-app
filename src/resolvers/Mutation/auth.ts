@@ -1,8 +1,10 @@
 import {Context} from "../../index";
 import validator from "validator";
 import bcrypt from 'bcryptjs';
+import JWT from 'jsonwebtoken';
+import {JSON_SIGNATURE} from "../../keys";
 interface SingupArgs {
-    user:{
+    input:{
         name:string,
         email:string,
         password:string,
@@ -11,17 +13,18 @@ interface SingupArgs {
 }
 interface UserPaylaod{
     userErrors:{message:string}[],
-    user:null
+    token:string | null
 }
 export const authResolver = {
-        signup:async (_:any, {user}:SingupArgs,{prisma}:Context):Promise<UserPaylaod>=>{
-            const {name,email,password, bio} = user
+        signup:async (_:any, {input}:SingupArgs,{prisma}:Context):Promise<UserPaylaod>=>{
+            const {name,email,password, bio} = input
+            console.log(input)
             const isEmail = validator.isEmail(email)
             console.log(isEmail)
             if(!isEmail){
                 return {
                     userErrors:[{message:'Invalid password'}],
-                    user:null
+                    token:null
                 }
             }
             const isValidatePassword = validator.isLength(password,{
@@ -30,19 +33,19 @@ export const authResolver = {
             if(!isValidatePassword){
                 return {
                     userErrors:[{message:'Invalid password '}],
-                    user:null
+                    token:null
                 }
             }
 
             if(!name || !bio){
                 return {
                     userErrors:[{message:'Invalid name or bio'}],
-                    user:null
+                    token:null
                 }
             }
             const hashPassword = await bcrypt.hash(password, 10);
 
-            await prisma.user.create({
+            const user = await prisma.user.create({
                 data:{
                     email,
                     name,
@@ -50,8 +53,15 @@ export const authResolver = {
                 }
             })
 
+            await prisma.profile.create({data:{bio,userId:user.id}})
+
+            const token = JWT.sign({
+                userId:user.id,
+                email:email
+            },JSON_SIGNATURE,{expiresIn:360000})
+
             return{
-                user:null,
+                token:token,
                 userErrors:[]
             }
             //
