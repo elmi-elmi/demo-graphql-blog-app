@@ -9,7 +9,12 @@ export const typeDefs = gql`
         postCreate(post:PostInput!):PostPayload!
         postUpdate(postId:ID!,post:PostInput!):PostPayload!    
         postDelete(postId:ID!):PostPayload!
-        signup(input:SingupInput!):AuthPayload
+        signup(input:SingupInput!):AuthPayload!
+        signin(credentials:CredentialsInput!):AuthPayload!
+    }
+    input CredentialsInput{
+        password:String!
+        email:String!
     }
     input SingupInput{
         email:String!

@@ -15,7 +15,30 @@ interface UserPaylaod{
     userErrors:{message:string}[],
     token:string | null
 }
+interface SigninArgs{
+    credentials:{
+        password:string,
+        email:string
+    }
+}
 export const authResolver = {
+    signin:async(_:any,{credentials}:SigninArgs,{prisma}:Context):Promise<UserPaylaod>=>{
+        const {password,email} = credentials;
+        const user = await prisma.user.findUnique({where:{email}})
+        if(!user) return {token:null,userErrors:[{message:'Invalid credentials'}]}
+        const isMatch = await bcrypt.compare(password, user.password);
+
+        if(!isMatch) return {token:null,userErrors:[{message:'Invalid credentials'}]}
+
+        return {
+            userErrors:[],
+            token:JWT.sign({
+                userId:user.id
+            },JSON_SIGNATURE,{expiresIn:3600000})
+        }
+
+    }
+    ,
         signup:async (_:any, {input}:SingupArgs,{prisma}:Context):Promise<UserPaylaod>=>{
             const {name,email,password, bio} = input
             console.log(input)
@@ -55,23 +78,13 @@ export const authResolver = {
 
             await prisma.profile.create({data:{bio,userId:user.id}})
 
-            const token = JWT.sign({
-                userId:user.id,
-                email:email
-            },JSON_SIGNATURE,{expiresIn:360000})
-
             return{
-                token:token,
+                token:JWT.sign({
+                    userId:user.id,
+                    email:email
+                },JSON_SIGNATURE,{expiresIn:360000})
+                ,
                 userErrors:[]
             }
-            //
-            // return prisma.user.create({
-            //     data:{
-            //         name,
-            //         email,
-            //         password,
-            //
-            //     }
-            // })
         }
 }
