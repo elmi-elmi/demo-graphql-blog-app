@@ -1,5 +1,6 @@
 import {Context} from "../../index";
 import {Post, Prisma} from '.prisma/client'
+import {canUserMutatePost} from "../../utils/canUserMutatePost";
 
 interface PostArgs {
     post: {
@@ -14,7 +15,12 @@ interface PostPayLoadType {
 }
 
 export const postResolver = {
-    postCreate: async (_: any, {post}: PostArgs, {prisma}: Context): Promise<PostPayLoadType> => {
+    postCreate: async (_: any, {post}: PostArgs, {prisma,userInfo}: Context): Promise<PostPayLoadType> => {
+        console.log('***** post create ******')
+        if(!userInfo) return {userErrors:[{message:'Forbidden access'}],post:null}
+        const {userId}= userInfo
+
+
         const {title, content} = post
         if (!title || !content) {
             return {
@@ -29,7 +35,7 @@ export const postResolver = {
             userErrors: [],
             post: prisma.post.create({
                 data: {
-                    authorId: 2,
+                    authorId: userId,
                     title,
                     content,
                 }
@@ -42,7 +48,16 @@ export const postResolver = {
     postUpdate: async (_: any, {
         postId,
         post
-    }: { postId: string, post: PostArgs["post"] }, {prisma}: Context):Promise<PostPayLoadType> => {
+    }: { postId: string, post: PostArgs["post"] }, {prisma,userInfo}: Context):Promise<PostPayLoadType> => {
+        console.log('***** post update ******')
+        if(!userInfo) return {userErrors:[{message:'Forbidden access'}],post:null}
+        const {userId}  = userInfo;
+
+        const error = await canUserMutatePost({userId,postId:Number(postId),prisma})
+
+        if(error) return error
+
+
         const {title, content} = post
         if(!title && !content){
             return {
@@ -79,7 +94,15 @@ export const postResolver = {
             })
         }
     },
-    postDelete:async (_:any,{postId}:{postId:string},{prisma}:Context):Promise<PostPayLoadType> =>{
+    postDelete:async (_:any,{postId}:{postId:string},{prisma, userInfo}:Context):Promise<PostPayLoadType> =>{
+        console.log('***** post delete ******')
+        if(!userInfo) return {userErrors:[{message:'Forbidden access'}],post:null}
+        const {userId}  = userInfo;
+
+        const error = await canUserMutatePost({userId,postId:Number(postId),prisma})
+
+        if(error) return error
+
         const post = await prisma.post.findUnique({
             where:{
                 id:Number(postId)

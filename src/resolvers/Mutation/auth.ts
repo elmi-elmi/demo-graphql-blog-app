@@ -23,6 +23,7 @@ interface SigninArgs{
 }
 export const authResolver = {
     signin:async(_:any,{credentials}:SigninArgs,{prisma}:Context):Promise<UserPaylaod>=>{
+        console.log('***** sign in ******')
         const {password,email} = credentials;
         const user = await prisma.user.findUnique({where:{email}})
         if(!user) return {token:null,userErrors:[{message:'Invalid credentials'}]}
@@ -40,6 +41,8 @@ export const authResolver = {
     }
     ,
         signup:async (_:any, {input}:SingupArgs,{prisma}:Context):Promise<UserPaylaod>=>{
+            console.log('***** sign up ******')
+
             const {name,email,password, bio} = input
             console.log(input)
             const isEmail = validator.isEmail(email)
