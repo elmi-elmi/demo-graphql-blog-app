@@ -11,6 +11,8 @@ export const typeDefs = gql`
         postDelete(postId:ID!):PostPayload!
         signup(input:SingupInput!):AuthPayload!
         signin(credentials:CredentialsInput!):AuthPayload!
+        postPublish(postId:ID!):PostPayload!
+        postUnpublish(postId:ID!):PostPayload!
     }
     input CredentialsInput{
         password:String!

@@ -15,10 +15,41 @@ interface PostPayLoadType {
 }
 
 export const postResolver = {
-    postCreate: async (_: any, {post}: PostArgs, {prisma,userInfo}: Context): Promise<PostPayLoadType> => {
+    postPublish: async (_: any, {postId}: { postId: string }, {
+        prisma,
+        userInfo
+    }: Context): Promise<PostPayLoadType> => {
+        if (!userInfo) return {userErrors: [{message: 'Forbidden access (post publish)'}], post: null}
+        const {userId} = userInfo
+        const error = await canUserMutatePost({userId, postId: Number(postId), prisma})
+        if (error) return {userErrors: [{message: "You can mutate this post"}], post: null}
+        const post = await prisma.post.update({data:{published:true},where: {id: Number(postId)}})
+        return {
+            userErrors: [],
+            post: post
+        }
+    }
+    ,
+    postUnpublish: async (_: any, {postId}: { postId: string }, {
+        prisma,
+        userInfo
+    }: Context): Promise<PostPayLoadType> => {
+        if (!userInfo) return {userErrors: [{message: 'Forbidden access'}], post: null}
+        const {userId} = userInfo
+        const error = await canUserMutatePost({userId, postId: Number(postId), prisma})
+        if (error) return {userErrors: [{message: "You can mutate this post"}], post: null}
+        const post = await prisma.post.update({data:{published:false},where: {id: Number(postId)}})
+
+        return {
+            userErrors: [],
+            post
+        }
+    }
+    ,
+    postCreate: async (_: any, {post}: PostArgs, {prisma, userInfo}: Context): Promise<PostPayLoadType> => {
         console.log('***** post create ******')
-        if(!userInfo) return {userErrors:[{message:'Forbidden access'}],post:null}
-        const {userId}= userInfo
+        if (!userInfo) return {userErrors: [{message: 'Forbidden access'}], post: null}
+        const {userId} = userInfo
 
 
         const {title, content} = post
@@ -48,84 +79,84 @@ export const postResolver = {
     postUpdate: async (_: any, {
         postId,
         post
-    }: { postId: string, post: PostArgs["post"] }, {prisma,userInfo}: Context):Promise<PostPayLoadType> => {
+    }: { postId: string, post: PostArgs["post"] }, {prisma, userInfo}: Context): Promise<PostPayLoadType> => {
         console.log('***** post update ******')
-        if(!userInfo) return {userErrors:[{message:'Forbidden access'}],post:null}
-        const {userId}  = userInfo;
+        if (!userInfo) return {userErrors: [{message: 'Forbidden access'}], post: null}
+        const {userId} = userInfo;
 
-        const error = await canUserMutatePost({userId,postId:Number(postId),prisma})
+        const error = await canUserMutatePost({userId, postId: Number(postId), prisma})
 
-        if(error) return error
+        if (error) return error
 
 
         const {title, content} = post
-        if(!title && !content){
+        if (!title && !content) {
             return {
-                userErrors:[{
-                    message:'Need to have at least one field to update.'
+                userErrors: [{
+                    message: 'Need to have at least one field to update.'
                 }],
-                post:null
+                post: null
             }
         }
 
         const existingPost = await prisma.post.findUnique({
-            where:{
-                id:Number(postId)
+            where: {
+                id: Number(postId)
             }
         })
-        if(!existingPost){
-            return{
-                userErrors:[{
-                    message:'Post does not exist'
+        if (!existingPost) {
+            return {
+                userErrors: [{
+                    message: 'Post does not exist'
                 }],
-                post:null
+                post: null
             }
         }
 
         let payloadToUpdate = {title, content}
-        if(!title) delete payloadToUpdate.title
-        if(!content) delete payloadToUpdate.content
+        if (!title) delete payloadToUpdate.title
+        if (!content) delete payloadToUpdate.content
 
-        return{
-            userErrors:[],
-            post:prisma.post.update({
-                data:{...payloadToUpdate},
-                where:{id:Number(postId)}
+        return {
+            userErrors: [],
+            post: prisma.post.update({
+                data: {...payloadToUpdate},
+                where: {id: Number(postId)}
             })
         }
     },
-    postDelete:async (_:any,{postId}:{postId:string},{prisma, userInfo}:Context):Promise<PostPayLoadType> =>{
+    postDelete: async (_: any, {postId}: { postId: string }, {prisma, userInfo}: Context): Promise<PostPayLoadType> => {
         console.log('***** post delete ******')
-        if(!userInfo) return {userErrors:[{message:'Forbidden access'}],post:null}
-        const {userId}  = userInfo;
+        if (!userInfo) return {userErrors: [{message: 'Forbidden access'}], post: null}
+        const {userId} = userInfo;
 
-        const error = await canUserMutatePost({userId,postId:Number(postId),prisma})
+        const error = await canUserMutatePost({userId, postId: Number(postId), prisma})
 
-        if(error) return error
+        if (error) return error
 
         const post = await prisma.post.findUnique({
-            where:{
-                id:Number(postId)
+            where: {
+                id: Number(postId)
             }
         })
 
-        if(!post){
-            return{
-                userErrors:[{
-                    message:'Post does not exist'
+        if (!post) {
+            return {
+                userErrors: [{
+                    message: 'Post does not exist'
                 }],
-                post:null
+                post: null
             }
         }
 
         await prisma.post.delete({
-            where:{
-                id:Number(postId)
+            where: {
+                id: Number(postId)
             }
         })
 
         return {
-            userErrors:[],
+            userErrors: [],
             post
         }
     }
