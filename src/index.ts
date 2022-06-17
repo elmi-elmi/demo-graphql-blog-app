@@ -1,6 +1,6 @@
 import {ApolloServer} from "apollo-server";
 import {typeDefs} from "./schema";
-import {Query, Mutation} from './resolvers';
+import {Query, Mutation, Profile} from './resolvers';
 
 import {PrismaClient, Prisma} from '@prisma/client'
 import {getUserFromToken} from "./utils/getUserFromToken";
@@ -14,6 +14,7 @@ export interface Context {
 const resolvers = {
     Query,
     Mutation,
+    Profile
 };
 
 const context = async ({req}:any)=>{
