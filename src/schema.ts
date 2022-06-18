@@ -52,6 +52,7 @@ export const typeDefs = gql`
         title:String!
         author:User!
         createdAt:String!
+        user:User!
     }
     type Profile{
         id:ID!

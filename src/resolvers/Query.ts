@@ -6,6 +6,9 @@ export const Query =  {
         return prisma.post.findMany({
             orderBy:{
                 createdAt:'desc'
+            },
+            where:{
+                published:true
             }
         })
     },
