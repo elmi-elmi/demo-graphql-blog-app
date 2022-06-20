@@ -20,7 +20,6 @@ const resolvers = {
 };
 
 const context = async ({req}:any)=>{
-    console.log('-------------------------------')
     const token = req.headers.authorization
     const userInfo = await getUserFromToken(req.headers.authorization)
     return {prisma,userInfo}
